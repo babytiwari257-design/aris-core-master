@@ -10,10 +10,37 @@
   --success: #10b981;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-body { background: var(--bg-dark); color: var(--text-main); height: 100vh; overflow: hidden; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
-/* Header */
+body {
+  background: var(--bg-dark);
+  color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Custom HUD Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}
+
+/* Header Bar */
 .hud-header {
   height: 56px;
   background: rgba(11, 15, 25, 0.95);
@@ -23,17 +50,95 @@ body { background: var(--bg-dark); color: var(--text-main); height: 100vh; overf
   align-items: center;
   padding: 0 20px;
 }
-.header-brand { display: flex; align-items: center; gap: 10px; }
-.header-brand h1 { font-size: 1.1rem; letter-spacing: 1.5px; font-weight: 700; color: #fff; }
-.header-brand h1 span { color: var(--accent-cyan); font-weight: 400; font-size: 0.9rem; }
-.pulse-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan); }
-.header-telemetry { display: flex; gap: 12px; align-items: center; }
-.telemetry-pill { font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; border: 1px solid var(--border-color); color: var(--text-dim); }
 
-/* Main 3-Pane Layout */
-.hud-main { display: grid; grid-template-columns: 280px 1fr 320px; height: calc(100vh - 56px); }
-.pane { border-right: 1px solid var(--border-color); display: flex; flex-direction: column; background: var(--bg-card); backdrop-filter: blur(8px); }
-.right-pane { border-right: none; }
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-brand h1 {
+  font-size: 1.1rem;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.header-brand h1 span {
+  color: var(--accent-cyan);
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+.pulse-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan);
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.header-telemetry {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.telemetry-pill {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  color: var(--text-dim);
+}
+
+/* Install App Button */
+.btn-install {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(168, 85, 247, 0.2));
+  border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.btn-install:hover {
+  background: var(--accent-cyan);
+  color: #000;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+/* 3-Pane Modular HUD Layout */
+.hud-main {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  height: calc(100vh - 56px);
+}
+
+.pane {
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+}
+
+.right-pane {
+  border-right: none;
+}
 
 .pane-header {
   padding: 14px 18px;
@@ -42,11 +147,30 @@ body { background: var(--bg-dark); color: var(--text-main); height: 100vh; overf
   justify-content: space-between;
   align-items: center;
 }
-.pane-header h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
-.badge { font-size: 0.65rem; background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); }
-.pane-content { padding: 16px; overflow-y: auto; flex: 1; }
 
-/* Left Pane Nodes */
+.pane-header h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.badge {
+  font-size: 0.65rem;
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent-cyan);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.pane-content {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Left Pane: Ecosystem Node Cards */
 .node-card {
   padding: 12px;
   background: rgba(255, 255, 255, 0.03);
@@ -55,34 +179,146 @@ body { background: var(--bg-dark); color: var(--text-main); height: 100vh; overf
   margin-bottom: 10px;
   transition: all 0.2s ease;
 }
-.node-card:hover { border-color: var(--accent-cyan); transform: translateY(-2px); }
-.node-card h4 { font-size: 0.95rem; color: #fff; margin-bottom: 4px; display: flex; justify-content: space-between; }
-.node-card p { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; }
-.node-link { font-size: 0.75rem; color: var(--accent-cyan); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
 
-/* Center Stage */
-.center-content { display: flex; flex-direction: column; height: 100%; position: relative; }
+.node-card:hover {
+  border-color: var(--accent-cyan);
+  transform: translateY(-2px);
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.node-card h4 {
+  font-size: 0.95rem;
+  color: #fff;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.node-card p {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.node-link {
+  font-size: 0.75rem;
+  color: var(--accent-cyan);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.node-link:hover {
+  text-decoration: underline;
+}
+
+/* Center Stage: Quantum Reactor Visualizer */
+.center-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
 .reactor-visualizer {
   height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  background: radial-gradient(circle, rgba(0, 240, 255, 0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, transparent 70%);
 }
-.reactor-ring { position: absolute; border-radius: 50%; border: 1px dashed rgba(0, 240, 255, 0.3); }
-.reactor-ring.outer { width: 90px; height: 90px; animation: spin 20s linear infinite; }
-.reactor-ring.inner { width: 60px; height: 60px; border-color: rgba(168, 85, 247, 0.4); animation: spin-rev 12s linear infinite; }
-.reactor-core { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-cyan); color: #000; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px var(--accent-cyan); }
-@keyframes spin { 100% { transform: rotate(360deg); } }
-@keyframes spin-rev { 100% { transform: rotate(-360deg); } }
 
-.conversation-stage { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
-.msg { padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; line-height: 1.5; max-width: 85%; }
-.user-msg { background: rgba(56, 189, 248, 0.15); border: 1px solid var(--border-color); align-self: flex-end; }
-.ai-msg { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); align-self: flex-start; }
-.system-msg { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2); align-self: center; font-size: 0.8rem; }
+.reactor-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 240, 255, 0.35);
+}
 
+.reactor-ring.outer {
+  width: 90px;
+  height: 90px;
+  animation: spin 20s linear infinite;
+}
+
+.reactor-ring.inner {
+  width: 60px;
+  height: 60px;
+  border-color: rgba(168, 85, 247, 0.45);
+  animation: spin-rev 12s linear infinite;
+}
+
+.reactor-core {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  color: #000;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px var(--accent-cyan);
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spin-rev {
+  100% { transform: rotate(-360deg); }
+}
+
+/* Conversation & Derivations Display */
+.conversation-stage {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.msg {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-width: 85%;
+  word-break: break-word;
+}
+
+.user-msg {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid var(--border-color);
+  align-self: flex-end;
+}
+
+.ai-msg {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  align-self: flex-start;
+}
+
+.system-msg {
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  align-self: center;
+  font-size: 0.8rem;
+}
+
+/* KaTeX formula formatting within chat */
+.msg .katex-display {
+  margin: 8px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+}
+
+/* Input Console */
 .input-console {
   padding: 12px 20px;
   background: rgba(11, 15, 25, 0.95);
@@ -90,6 +326,7 @@ body { background: var(--bg-dark); color: var(--text-main); height: 100vh; overf
   display: flex;
   gap: 10px;
 }
+
 .input-console input {
   flex: 1;
   background: rgba(255, 255, 255, 0.05);
@@ -98,28 +335,209 @@ body { background: var(--bg-dark); color: var(--text-main); height: 100vh; overf
   padding: 10px 14px;
   border-radius: 6px;
   outline: none;
+  font-size: 0.9rem;
 }
-.btn-mic { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); color: #fff; width: 44px; border-radius: 6px; cursor: pointer; }
-.btn-send, .btn-primary { background: var(--accent-cyan); color: #000; font-weight: 600; padding: 0 18px; border: none; border-radius: 6px; cursor: pointer; }
-.btn-secondary { background: transparent; border: 1px solid var(--border-color); color: #fff; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
-.btn-sm { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 4px; cursor: pointer; }
 
-/* Right Pane Tools */
-.daemon-banner { font-size: 0.75rem; color: var(--text-dim); background: rgba(255, 255, 255, 0.02); padding: 8px; border-radius: 6px; margin-bottom: 14px; border-left: 3px solid var(--accent-cyan); }
-.app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 20px 0; }
-.app-btn { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-color); color: #fff; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
-.app-btn:hover { border-color: var(--accent-cyan); }
-.terminal-box { margin-top: 10px; }
-.term-input-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
-.term-input-row input { flex: 1; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--border-color); color: #38bdf8; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.8rem; }
-#term-output { background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); padding: 8px; border-radius: 4px; color: #a3e635; font-size: 0.75rem; height: 140px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; }
+.input-console input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+}
 
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.auth-box { width: 340px; background: #0f172a; border: 1px solid var(--accent-cyan); border-radius: 10px; padding: 24px; text-align: center; }
-.core-logo-badge { font-size: 0.8rem; font-weight: 700; color: var(--accent-cyan); letter-spacing: 2px; margin-bottom: 8px; }
-.auth-box h2 { font-size: 1.2rem; margin-bottom: 6px; }
-.auth-box p { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 16px; }
-.auth-box input { width: 100%; margin-bottom: 10px; padding: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 6px; }
-.auth-actions { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
-.error-text { font-size: 0.75rem; color: var(--danger); margin-top: 8px; }
+.btn-mic {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  width: 44px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-send, .btn-primary {
+  background: var(--accent-cyan);
+  color: #000;
+  font-weight: 600;
+  padding: 0 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-send:hover, .btn-primary:hover {
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-sm {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Right Pane: Automation Tools */
+.daemon-banner {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.daemon-banner code {
+  color: var(--accent-cyan);
+}
+
+.right-pane h4 {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.app-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.app-btn:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.terminal-box {
+  margin-top: 10px;
+}
+
+.term-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.term-input-row span {
+  color: var(--accent-cyan);
+  font-family: monospace;
+}
+
+.term-input-row input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+  color: #38bdf8;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+#term-output {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px;
+  border-radius: 4px;
+  color: #a3e635;
+  font-size: 0.75rem;
+  height: 140px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: monospace;
+}
+
+/* Master Auth Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.auth-box {
+  width: 340px;
+  background: #0f172a;
+  border: 1px solid var(--accent-cyan);
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.2);
+}
+
+.core-logo-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.auth-box h2 {
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+}
+
+.auth-box p {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+.auth-box input {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  border-radius: 6px;
+  outline: none;
+}
+
+.auth-box input:focus {
+  border-color: var(--accent-cyan);
+}
+
+.auth-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.error-text {
+  font-size: 0.75rem;
+  color: var(--danger);
+  margin-top: 8px;
+}
