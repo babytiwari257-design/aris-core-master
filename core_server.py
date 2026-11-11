@@ -28,7 +28,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WEB_DIR = os.path.join(BASE_DIR, "web")
 os.makedirs(WEB_DIR, exist_ok=True)
 
-SECRET_KEY = os.environ.get("ARIS_JWT_SECRET", "aris_core_super_secret_master_key_2026")
+# Secure 32+ byte default key for HMAC-SHA256
+SECRET_KEY = os.environ.get(
+    "ARIS_JWT_SECRET", 
+    "aris_industries_master_quantum_secret_key_2026_secure_edition_v1"
+)
 ALGORITHM = "HS256"
 
 # ================= ARIS ECOSYSTEM NODES =================
@@ -180,7 +184,7 @@ def sanitize_speech_text(text: str) -> str:
     text = re.sub(r"[*#`>_~\\{}^|]", " ", text)
     return re.sub(r"\s+", " ", text).strip()
 
-# ================= AI REASONING ROUTER =================
+# ================= UNIVERSAL AI REASONING ROUTER =================
 @app.post("/api/chat")
 async def chat_router(req: ChatRequest, authorization: str = Header(default="")):
     user_id = verify_token(authorization)
@@ -188,7 +192,7 @@ async def chat_router(req: ChatRequest, authorization: str = Header(default=""))
     gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
     groq_key = os.environ.get("GROQ_API_KEY", "").strip()
 
-    print(f"[*] Incoming prompt by {user_id}. GEMINI_KEY: {bool(gemini_key)} | GROQ_KEY: {bool(groq_key)}")
+    print(f"[*] Prompt from {user_id}. GEMINI_KEY: {bool(gemini_key)} | GROQ_KEY: {bool(groq_key)}")
 
     messages = [{"role": "system", "content": ARIS_CORE_SYSTEM_PROMPT}]
     for h in req.history[-6:]:
@@ -196,73 +200,95 @@ async def chat_router(req: ChatRequest, authorization: str = Header(default=""))
             messages.append({"role": h["role"], "content": h["content"]})
     messages.append({"role": "user", "content": req.prompt.strip()})
 
-    # 1. Primary: Gemini API
+    # TIER 1: All Gemini Production & Fallback Models
     if gemini_key:
-        models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
-        for m_name in models_to_try:
-            try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={gemini_key}"
-                contents = []
-                for m in messages:
-                    if m["role"] == "system":
-                        continue
-                    role = "model" if m["role"] == "assistant" else "user"
-                    contents.append({"role": role, "parts": [{"text": m["content"]}]})
+        gemini_model_candidates = [
+            "gemini-3.8-flash",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash-exp",
+            "gemini-1.5-flash-8b",
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-pro-latest"
+        ]
+        
+        contents = []
+        for m in messages:
+            if m["role"] == "system":
+                continue
+            role = "model" if m["role"] == "assistant" else "user"
+            contents.append({"role": role, "parts": [{"text": m["content"]}]})
 
-                payload = {
-                    "systemInstruction": {"parts": [{"text": ARIS_CORE_SYSTEM_PROMPT}]},
-                    "contents": contents,
-                    "generationConfig": {"temperature": 0.7, "maxOutputTokens": 3000}
-                }
-                async with httpx.AsyncClient(timeout=30.0) as client:
+        payload = {
+            "systemInstruction": {"parts": [{"text": ARIS_CORE_SYSTEM_PROMPT}]},
+            "contents": contents,
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 3000}
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for g_model in gemini_model_candidates:
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{g_model}:generateContent?key={gemini_key}"
                     res = await client.post(url, json=payload)
                     if res.status_code == 200:
                         data = res.json()
                         reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                        print(f"[+] Active Engine: Google Gemini ({g_model})")
                         return {
                             "reply": reply_text,
                             "speech": sanitize_speech_text(reply_text),
-                            "model": f"GEMINI ({m_name.upper()})",
+                            "model": f"GEMINI ({g_model.upper()})",
                             "ok": True
                         }
                     else:
-                        print(f"[!] Gemini model {m_name} failed: HTTP {res.status_code} - {res.text[:200]}")
-            except Exception as e:
-                print(f"[!] Gemini exception on {m_name}: {str(e)}")
+                        print(f"[-] Gemini {g_model} returned HTTP {res.status_code}")
+                except Exception as e:
+                    print(f"[!] Gemini {g_model} network/parse error: {e}")
 
-    # 2. Fallback: Groq API
+    # TIER 2: All Groq High-Speed Models
     if groq_key:
-        try:
-            url = "https://api.groq.com/openai/v1/chat/completions"
-            headers = {
-                "Authorization": f"Bearer {groq_key}",
-                "Content-Type": "application/json"
-            }
-            payload = {
-                "model": "llama-3.3-70b-versatile",
-                "messages": messages,
-                "max_tokens": 2500
-            }
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                res = await client.post(url, headers=headers, json=payload)
-                if res.status_code == 200:
-                    data = res.json()
-                    reply_text = data["choices"][0]["message"]["content"]
-                    return {
-                        "reply": reply_text,
-                        "speech": sanitize_speech_text(reply_text),
-                        "model": "GROQ (LLAMA-3.3-70B)",
-                        "ok": True
+        groq_model_candidates = [
+            "llama-3.1-70b-versatile",
+            "llama-3.1-8b-instant",
+            "llama3-70b-8192",
+            "llama3-8b-8192",
+            "mixtral-8x7b-32768",
+            "gemma2-9b-it"
+        ]
+
+        headers = {
+            "Authorization": f"Bearer {groq_key}",
+            "Content-Type": "application/json"
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for groq_m in groq_model_candidates:
+                try:
+                    groq_payload = {
+                        "model": groq_m,
+                        "messages": messages,
+                        "max_tokens": 2500
                     }
-                else:
-                    print(f"[!] Groq HTTP Error: {res.status_code} - {res.text[:200]}")
-        except Exception as e:
-            print(f"[!] Groq exception: {str(e)}")
+                    url = "https://api.groq.com/openai/v1/chat/completions"
+                    res = await client.post(url, headers=headers, json=groq_payload)
+                    if res.status_code == 200:
+                        data = res.json()
+                        reply_text = data["choices"][0]["message"]["content"]
+                        print(f"[+] Active Engine: Groq ({groq_m})")
+                        return {
+                            "reply": reply_text,
+                            "speech": sanitize_speech_text(reply_text),
+                            "model": f"GROQ ({groq_m.upper()})",
+                            "ok": True
+                        }
+                    else:
+                        print(f"[-] Groq {groq_m} returned HTTP {res.status_code}")
+                except Exception as e:
+                    print(f"[!] Groq {groq_m} network/parse error: {e}")
 
     return {
-        "reply": "ARIS CORE: Neural synthesis gateway failed to establish link. Check Render Server Logs for exact error codes.",
-        "speech": "Neural connection mein issue hai, please logs check karein.",
-        "model": "LINK_FAILED",
+        "reply": "ARIS CORE: Sabhi neural links fail ho gaye hain. Kripya Render logs dekhein.",
+        "speech": "Sabhi neural engines unreachable hain, system logs check karein.",
+        "model": "ALL_MODELS_FAILED",
         "ok": False
     }
 
