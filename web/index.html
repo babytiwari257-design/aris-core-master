@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ARIS CORE // Ecosystem Master Gateway</title>
   <link rel="stylesheet" href="/style.css" />
-  <!-- KaTeX for crisp Math & Physics Derivations -->
+  <!-- KaTeX for Math & Physics Derivations -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 </head>
 <body>
-  <!-- Auth Overlay -->
+  <!-- Master Identity Auth Modal -->
   <div id="auth-modal" class="modal-overlay">
     <div class="auth-box">
       <div class="core-logo-badge">▲ ARIS CORE</div>
@@ -27,9 +27,9 @@
     </div>
   </div>
 
-  <!-- Main Viewport -->
+  <!-- Main Viewport Container -->
   <div class="hud-container">
-    <!-- Top Header Bar -->
+    <!-- Top Header Bar with Install App Button -->
     <header class="hud-header">
       <div class="header-brand">
         <span class="pulse-indicator"></span>
@@ -38,11 +38,12 @@
       <div class="header-telemetry">
         <span class="telemetry-pill" id="daemon-status">DAEMON: OFFLINE</span>
         <span class="telemetry-pill" id="user-badge">ID: UNVERIFIED</span>
+        <button id="btn-install-app" class="btn-install">⬇ Install App</button>
         <button id="btn-logout" class="btn-sm">Lock Session</button>
       </div>
     </header>
 
-    <!-- 3-Pane Modular HUD -->
+    <!-- 3-Pane Modular HUD Layout -->
     <main class="hud-main">
       <!-- Left Pane: Ecosystem Hub -->
       <section class="pane left-pane">
@@ -63,7 +64,7 @@
         </div>
 
         <div class="center-content">
-          <!-- Central Reactor Waveform -->
+          <!-- Central Quantum Reactor Visualizer -->
           <div class="reactor-visualizer">
             <div class="reactor-ring outer"></div>
             <div class="reactor-ring inner"></div>
@@ -77,7 +78,7 @@
             </div>
           </div>
 
-          <!-- Bottom Voice & Text Bar -->
+          <!-- Input Console -->
           <div class="input-console">
             <button id="btn-mic" class="btn-mic" title="Voice Input">🎙️</button>
             <input type="text" id="txt-input" placeholder="Enter query, derivation request, or local command..." />
