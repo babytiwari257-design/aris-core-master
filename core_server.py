@@ -158,7 +158,6 @@ async def get_sso_nodes(authorization: str = Header(default="")):
     user_id = verify_token(authorization)
     role = USERS_DB.get(user_id, {}).get("role", "user")
 
-    # Generate node-specific pass tickets
     authorized_nodes = {}
     for key, node in ECOSYSTEM_NODES.items():
         node_copy = dict(node)
@@ -185,7 +184,11 @@ def sanitize_speech_text(text: str) -> str:
 @app.post("/api/chat")
 async def chat_router(req: ChatRequest, authorization: str = Header(default="")):
     user_id = verify_token(authorization)
-    key = os.environ.get("GEMINI_API_KEY", "").strip() or os.environ.get("GROQ_API_KEY", "").strip()
+
+    gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    groq_key = os.environ.get("GROQ_API_KEY", "").strip()
+
+    print(f"[*] Incoming prompt by {user_id}. GEMINI_KEY: {bool(gemini_key)} | GROQ_KEY: {bool(groq_key)}")
 
     messages = [{"role": "system", "content": ARIS_CORE_SYSTEM_PROMPT}]
     for h in req.history[-6:]:
@@ -193,65 +196,73 @@ async def chat_router(req: ChatRequest, authorization: str = Header(default=""))
             messages.append({"role": h["role"], "content": h["content"]})
     messages.append({"role": "user", "content": req.prompt.strip()})
 
-    # Primary: Gemini API
-    gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    # 1. Primary: Gemini API
     if gemini_key:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
-            contents = []
-            for m in messages:
-                if m["role"] == "system": continue
-                role = "model" if m["role"] == "assistant" else "user"
-                contents.append({"role": role, "parts": [{"text": m["content"]}]})
-            
-            payload = {
-                "systemInstruction": {"parts": [{"text": ARIS_CORE_SYSTEM_PROMPT}]},
-                "contents": contents,
-                "generationConfig": {"temperature": 0.7, "maxOutputTokens": 3000}
-            }
-            async with httpx.AsyncClient(timeout=35.0) as client:
-                res = await client.post(url, json=payload)
-                res.raise_for_status()
-                data = res.json()
-                reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
-                return {
-                    "reply": reply_text,
-                    "speech": sanitize_speech_text(reply_text),
-                    "model": "GEMINI 2.5 FLASH",
-                    "ok": True
-                }
-        except Exception as e:
-            pass
+        models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+        for m_name in models_to_try:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={gemini_key}"
+                contents = []
+                for m in messages:
+                    if m["role"] == "system":
+                        continue
+                    role = "model" if m["role"] == "assistant" else "user"
+                    contents.append({"role": role, "parts": [{"text": m["content"]}]})
 
-    # Fallback: Groq API
-    groq_key = os.environ.get("GROQ_API_KEY", "").strip()
+                payload = {
+                    "systemInstruction": {"parts": [{"text": ARIS_CORE_SYSTEM_PROMPT}]},
+                    "contents": contents,
+                    "generationConfig": {"temperature": 0.7, "maxOutputTokens": 3000}
+                }
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    res = await client.post(url, json=payload)
+                    if res.status_code == 200:
+                        data = res.json()
+                        reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                        return {
+                            "reply": reply_text,
+                            "speech": sanitize_speech_text(reply_text),
+                            "model": f"GEMINI ({m_name.upper()})",
+                            "ok": True
+                        }
+                    else:
+                        print(f"[!] Gemini model {m_name} failed: HTTP {res.status_code} - {res.text[:200]}")
+            except Exception as e:
+                print(f"[!] Gemini exception on {m_name}: {str(e)}")
+
+    # 2. Fallback: Groq API
     if groq_key:
         try:
             url = "https://api.groq.com/openai/v1/chat/completions"
-            headers = {"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"}
+            headers = {
+                "Authorization": f"Bearer {groq_key}",
+                "Content-Type": "application/json"
+            }
             payload = {
                 "model": "llama-3.3-70b-versatile",
                 "messages": messages,
-                "max_tokens": 3000
+                "max_tokens": 2500
             }
-            async with httpx.AsyncClient(timeout=35.0) as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 res = await client.post(url, headers=headers, json=payload)
-                res.raise_for_status()
-                data = res.json()
-                reply_text = data["choices"][0]["message"]["content"]
-                return {
-                    "reply": reply_text,
-                    "speech": sanitize_speech_text(reply_text),
-                    "model": "GROQ LLAMA-3.3-70B",
-                    "ok": True
-                }
+                if res.status_code == 200:
+                    data = res.json()
+                    reply_text = data["choices"][0]["message"]["content"]
+                    return {
+                        "reply": reply_text,
+                        "speech": sanitize_speech_text(reply_text),
+                        "model": "GROQ (LLAMA-3.3-70B)",
+                        "ok": True
+                    }
+                else:
+                    print(f"[!] Groq HTTP Error: {res.status_code} - {res.text[:200]}")
         except Exception as e:
-            pass
+            print(f"[!] Groq exception: {str(e)}")
 
     return {
-        "reply": "ARIS CORE ready. Add GEMINI_API_KEY or GROQ_API_KEY in environment to enable neural synthesis.",
-        "speech": "API key configure karein taaki neural core online aa sake.",
-        "model": "OFFLINE",
+        "reply": "ARIS CORE: Neural synthesis gateway failed to establish link. Check Render Server Logs for exact error codes.",
+        "speech": "Neural connection mein issue hai, please logs check karein.",
+        "model": "LINK_FAILED",
         "ok": False
     }
 
@@ -259,13 +270,17 @@ async def chat_router(req: ChatRequest, authorization: str = Header(default=""))
 @app.post("/api/tts")
 async def synthesize_voice(req: TTSRequest):
     clean = sanitize_speech_text(req.text)[:600] or "ARIS Core stands ready."
-    comm = edge_tts.Communicate(clean, req.voice, rate="+3%", pitch="-1Hz")
-    buf = io.BytesIO()
-    async for chunk in comm.stream():
-        if chunk["type"] == "audio":
-            buf.write(chunk["data"])
-    buf.seek(0)
-    return StreamingResponse(buf, media_type="audio/mpeg")
+    try:
+        comm = edge_tts.Communicate(clean, req.voice, rate="+3%", pitch="-1Hz")
+        buf = io.BytesIO()
+        async for chunk in comm.stream():
+            if chunk["type"] == "audio":
+                buf.write(chunk["data"])
+        buf.seek(0)
+        return StreamingResponse(buf, media_type="audio/mpeg")
+    except Exception as e:
+        print(f"[!] TTS Error: {e}")
+        raise HTTPException(status_code=500, detail="Voice synthesis failed")
 
 def read_web_file(filename: str) -> str:
     p = os.path.join(WEB_DIR, filename)
