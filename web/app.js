@@ -2,6 +2,7 @@ let authToken = localStorage.getItem("aris_token") || "";
 let currentUser = localStorage.getItem("aris_user") || "";
 let conversationHistory = [];
 let daemonSocket = null;
+let deferredPrompt = null;
 
 // ================= INITIALIZATION =================
 window.addEventListener("DOMContentLoaded", () => {
@@ -12,6 +13,7 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("auth-modal").style.display = "flex";
   }
   connectDaemon();
+  setupInstallButton();
 });
 
 // ================= AUTHENTICATION =================
@@ -54,7 +56,7 @@ function initSession() {
   loadEcosystemNodes();
 }
 
-// ================= ECOSYSTEM NODES LOADER =================
+// ================= ECOSYSTEM NODES (SSO) =================
 async function loadEcosystemNodes() {
   const container = document.getElementById("nodes-list");
   try {
@@ -81,13 +83,14 @@ async function loadEcosystemNodes() {
   }
 }
 
-// ================= LOCAL DESKTOP DAEMON =================
+// ================= LOCAL DESKTOP DAEMON (WEBSOCKET) =================
 function connectDaemon() {
   try {
     daemonSocket = new WebSocket("ws://localhost:8765");
     daemonSocket.onopen = () => {
-      document.getElementById("daemon-status").textContent = "DAEMON: ACTIVE (LOCAL)";
-      document.getElementById("daemon-status").style.color = "#10b981";
+      const status = document.getElementById("daemon-status");
+      status.textContent = "DAEMON: ACTIVE (LOCAL)";
+      status.style.color = "#10b981";
       document.getElementById("daemon-banner").style.display = "none";
     };
     daemonSocket.onmessage = (event) => {
@@ -97,8 +100,9 @@ function connectDaemon() {
       }
     };
     daemonSocket.onclose = () => {
-      document.getElementById("daemon-status").textContent = "DAEMON: OFFLINE";
-      document.getElementById("daemon-status").style.color = "#ef4444";
+      const status = document.getElementById("daemon-status");
+      status.textContent = "DAEMON: OFFLINE";
+      status.style.color = "#ef4444";
       setTimeout(connectDaemon, 5000);
     };
   } catch (e) {
@@ -149,7 +153,10 @@ async function sendPrompt() {
       body: JSON.stringify({ prompt: prompt, history: conversationHistory })
     });
     const data = await res.json();
+
+    document.getElementById("ai-model-tag").textContent = data.model || "ONLINE";
     appendMessage("ai", data.reply);
+    
     conversationHistory.push({ role: "user", content: prompt });
     conversationHistory.push({ role: "assistant", content: data.reply });
 
@@ -169,7 +176,7 @@ function appendMessage(role, text) {
   stage.appendChild(box);
   stage.scrollTop = stage.scrollHeight;
 
-  // Auto-render math with KaTeX
+  // Auto-render KaTeX math formulas
   if (window.renderMathInElement) {
     window.renderMathInElement(box, {
       delimiters: [
@@ -194,4 +201,35 @@ async function playVoiceOutput(cleanText) {
   } catch (e) {
     console.error("Audio playback error:", e);
   }
+}
+
+// ================= INSTALL APP & DESKTOP HOOK =================
+function setupInstallButton() {
+  const installBtn = document.getElementById("btn-install-app");
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        installBtn.style.display = "none";
+      }
+      deferredPrompt = null;
+    } else {
+      const confirmDownload = confirm("ARIS CORE Desktop Launcher (.bat) download karna hai?");
+      if (confirmDownload) {
+        const batContent = `@echo off\r\ntitle ARIS CORE Desktop Daemon\r\necho Starting ARIS Automation Daemon...\r\npython aris_daemon.py\r\npause\r\n`;
+        const blob = new Blob([batContent], { type: "application/bat" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "start_aris_daemon.bat";
+        a.click();
+      }
+    }
+  });
 }
