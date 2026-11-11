@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARIS CORE // Ecosystem Master Gateway</title>
+  <link rel="stylesheet" href="/style.css" />
+  <!-- KaTeX for crisp Math & Physics Derivations -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+  <!-- Auth Overlay -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="auth-box">
+      <div class="core-logo-badge">▲ ARIS CORE</div>
+      <h2>Identity Verification</h2>
+      <p>Enter Master Credentials to unlock ecosystem SSO & local daemon access.</p>
+      <input type="text" id="auth-uid" placeholder="User ID (e.g. founder)" value="founder" />
+      <input type="password" id="auth-pwd" placeholder="Password" value="aris123" />
+      <div class="auth-actions">
+        <button id="btn-login" class="btn-primary">Authenticate</button>
+        <button id="btn-register" class="btn-secondary">New Node Access</button>
+      </div>
+      <div id="auth-err" class="error-text"></div>
+    </div>
+  </div>
+
+  <!-- Main Viewport -->
+  <div class="hud-container">
+    <!-- Top Header Bar -->
+    <header class="hud-header">
+      <div class="header-brand">
+        <span class="pulse-indicator"></span>
+        <h1>ARIS CORE <span>// OS GATEWAY</span></h1>
+      </div>
+      <div class="header-telemetry">
+        <span class="telemetry-pill" id="daemon-status">DAEMON: OFFLINE</span>
+        <span class="telemetry-pill" id="user-badge">ID: UNVERIFIED</span>
+        <button id="btn-logout" class="btn-sm">Lock Session</button>
+      </div>
+    </header>
+
+    <!-- 3-Pane Modular HUD -->
+    <main class="hud-main">
+      <!-- Left Pane: Ecosystem Hub -->
+      <section class="pane left-pane">
+        <div class="pane-header">
+          <h3>Ecosystem Nodes (SSO)</h3>
+          <span class="badge">NETWORK</span>
+        </div>
+        <div class="pane-content" id="nodes-list">
+          <div class="loading-nodes">Authenticating neural nodes...</div>
+        </div>
+      </section>
+
+      <!-- Center Pane: Voice Core & Math Display -->
+      <section class="pane center-pane">
+        <div class="pane-header">
+          <h3>Quantum Intelligence Core</h3>
+          <span class="badge" id="ai-model-tag">ONLINE</span>
+        </div>
+
+        <div class="center-content">
+          <!-- Central Reactor Waveform -->
+          <div class="reactor-visualizer">
+            <div class="reactor-ring outer"></div>
+            <div class="reactor-ring inner"></div>
+            <div class="reactor-core" id="reactor-core">▲</div>
+          </div>
+
+          <!-- Live Dialogue & Math Derivation Stage -->
+          <div class="conversation-stage" id="chat-stage">
+            <div class="msg system-msg">
+              <strong>ARIS CORE:</strong> Systems online. Mathematical and reasoning engines standing by. Ask a question or trigger local automation.
+            </div>
+          </div>
+
+          <!-- Bottom Voice & Text Bar -->
+          <div class="input-console">
+            <button id="btn-mic" class="btn-mic" title="Voice Input">🎙️</button>
+            <input type="text" id="txt-input" placeholder="Enter query, derivation request, or local command..." />
+            <button id="btn-send" class="btn-send">Execute</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Pane: Desktop Automation & Apps Launcher -->
+      <section class="pane right-pane">
+        <div class="pane-header">
+          <h3>Desktop Automation</h3>
+          <span class="badge">LOCAL AGENT</span>
+        </div>
+        <div class="pane-content">
+          <div class="daemon-banner" id="daemon-banner">
+            Run <code>python aris_daemon.py</code> on your computer to bind system-level voice automation.
+          </div>
+
+          <h4>Quick Launchers</h4>
+          <div class="app-grid">
+            <button class="app-btn" onclick="triggerApp('notepad')">Notepad</button>
+            <button class="app-btn" onclick="triggerApp('calc')">Calculator</button>
+            <button class="app-btn" onclick="triggerApp('cmd')">Terminal</button>
+            <button class="app-btn" onclick="triggerApp('explorer')">File Explorer</button>
+          </div>
+
+          <h4>Direct Terminal Dispatch</h4>
+          <div class="terminal-box">
+            <div class="term-input-row">
+              <span>$</span>
+              <input type="text" id="term-cmd" placeholder="e.g. dir, ping 1.1.1.1, python -V" />
+              <button id="btn-term-run" class="btn-sm">Run</button>
+            </div>
+            <pre id="term-output">Awaiting daemon execution...</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
